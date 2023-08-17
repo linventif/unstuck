@@ -137,8 +137,8 @@ if SERVER then
 
     local function findValidPos(initPos, radius, maxChecks)
         // get info from the arguments
-        local searchRadius = radius || 96 // default to 96 units (3x player hull)
-        local maxAttempts = maxChecks || 40 // default to 40 checks
+        local searchRadius = radius || 180
+        local maxAttempts = maxChecks || 60
 
         // check if the spawn position is valid
         if isValidPlyPos(initPos) then
@@ -147,7 +147,7 @@ if SERVER then
 
         // try to find a valid position in a random direction
         for i = 1, maxAttempts do
-            local genPos = initPos + Vector(math.random(-searchRadius, searchRadius), math.random(-searchRadius, searchRadius), 0)
+            local genPos = initPos + Vector(math.random(-searchRadius, searchRadius), math.random(-searchRadius, searchRadius), math.random(-searchRadius, searchRadius) )
             local validPos = isValidPlyPos(genPos)
             if validPos then
                 return validPos
@@ -190,7 +190,6 @@ if SERVER then
     local function saveConfig()
         // save config
         file.Write("unstuck/config.json", util.TableToJSON(config, true))
-        sendMsg(ply, "save_config")
         // Send config to all player
         for _, ply in pairs(player.GetAll()) do
             sendConfig(ply)
@@ -215,7 +214,6 @@ if SERVER then
             end
             ply.lastUnstuck = CurTime() + config.cooldown
             // find a valid pos
-            print(config.maxDistance, config.maxTry)
             local pos = findValidPos(ply:GetPos(), config.maxDistance, config.maxTry)
             if (pos) then
                 ply:SetPos(pos)
@@ -251,6 +249,7 @@ if SERVER then
             end
             // save config
             saveConfig()
+            sendMsg(ply, "save_config")
         end,
         [4] = function(ply)
             // verify perm
@@ -334,7 +333,6 @@ else
         if (ply != LocalPlayer()) then return end // if not local player
         // if text contain one of the command
         for word, value in pairs(config.word) do
-            print(word, value)
             if !value then continue end
             if (string.find(text:lower(), word)) then
                 // send net to server
@@ -348,7 +346,7 @@ else
     concommand.Add("unstuck", unstuckMe)
 
     // Admin Concommand
-    concommand.Add("unstuck_setting", function(cmd, args)
+    concommand.Add("unstuck_setting", function(ply, cmd, args)
         sendNet(3, function()
             net.WriteString(args[1])
             net.WriteString(args[2])
