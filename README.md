@@ -4,14 +4,9 @@ Allow players to get unstuck from the map, player or anything else.
 
 ## Features
 
-- Chat Commands
+- Chat and Console Commands
 - In-Game Configuration
 - Multi Language
-
-## Requirements
-
-- [Garry's Mod Server](https://store.steampowered.com/app/4000/Garrys_Mod/)
-- [Garry's Mod Workshop Collection](http://wiki.garrysmod.com/page/Workshop_for_Dedicated_Servers)
 
 ## Installation
 
