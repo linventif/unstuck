@@ -21,9 +21,10 @@ config.getLangFromAPI = true // get more language from api
 config.getWordFromAPI = true // get more word from api
 
 // Config Unstuck
-config.word = { // if any of this word are in the chat, the player will be unstuck
-    ["unstuck"] = true,
-    ["stuck"] = true,
+// command list
+config.word = { 
+    ["!unstuck"] = true,
+    ["!stuck"] = true,
 }
 config.cooldown = 60 // in seconds
 config.maxDistance = 96 // max distance form player
@@ -32,6 +33,8 @@ config.maxTry = 20 // max try to unstuck
 // Language
 lang.english = {
     ["unstuck"] = "You have been unstuck!",
+    ["not_stuck"] = "You don't seem to be stuck. Maybe try again?",
+    ["dead"] = "You are dead!", // should we also add a check for dead players?
     ["cooldown"] = "You have to wait %s seconds before using this command again!",
     ["fail"] = "We can't unstuck you, try again later or contact an admin!",
     ["no_perm"] = "You don't have the permission to use this command!",
@@ -203,8 +206,13 @@ if SERVER then
         end,
         [2] = function(ply)
             // verify if valid player
-            if (!IsValid(ply) || !ply:IsPlayer()) then
-                return
+            if (!IsValid(ply) || !ply:IsPlayer()) then return end
+            // verify if the player is in fact stuck
+            // verify if the player is on the ground as well to disallow fall damage/death prevention
+            if !ply:GetPhysicsObject():IsPenetrating() and !ply:IsOnGround() then
+                sendMsg(ply, "not_stuck")
+
+                return 
             end
             // verify if cooldown
             if (ply.lastUnstuck && ply.lastUnstuck > CurTime()) then
@@ -330,16 +338,13 @@ else
 
     // Chat
     hook.Add("OnPlayerChat", "UnstuckChat", function(ply, text)
-        if (ply != LocalPlayer()) then return end // if not local player
-        // if text contain one of the command
-        for word, value in pairs(config.word) do
-            if !value then continue end
-            if (string.find(text:lower(), word)) then
-                // send net to server
-                unstuckMe()
-                return true
-            end
-        end
+        
+        if (ply != LocalPlayer()) then return end
+        // if player message is one of the commands on the config
+        if !ultimate_unstuck.config.command[string.lower(text)] then return end
+    
+        unstuckMe()
+        return true
     end)
 
     // Concommand
